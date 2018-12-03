@@ -172,7 +172,7 @@ Alert data are exposed as RESTful APIs. These are not recommended to be used as 
 * [GET]/RDBMSDataService/allSelectedEpicPatients
     * Retrieves all Monitoring Epic Patients    
     
-### Installation and Testing
+### Deployment Guide and Testing
     
 * Click [here](./dist/wso2hc-1.0.0) for the Local Installation Guide.
 * Click [here](./dist/docker-products) for the Docker Installation Guide.    

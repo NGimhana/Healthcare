@@ -1,4 +1,4 @@
-## Installation Guide
+## Deployment Guide
 
 #### Prerequisites
  

@@ -9,7 +9,7 @@ Note: Current Implementation only supports  EPIC systems (FHIR-DSTU2).
 
 This is a Simple Implementation of Realtime Healthcare-Notification Platform. Find below diagram to understand the flow of this solution.
 
-![Process Diagram](../../src/docs/ArchitecturalDiagrams/processflow.png)
+![Process Diagram](./src/docs/ArchitecturalDiagrams/processflow.png)
 
 **Step 1 : WSO2 EI fetches data from EHR systems(EPIC Sandbox in this case).** 
 
@@ -29,7 +29,7 @@ Find Below table for the Sequences and what they are fetching.
 |2093-3|Blood Cholesterol| EPIC_DATA_POLL_CHOLESTEROL_OBSERVATION_SEQUENCE|
 
 ##### EPIC APIS Used 
-Use [WSO2 ESB EPIC Connector](https://github.com/NGimhana/HC_ALERT/blob/master/docs/Architectural%20Diagrams/processflow.png) for execute EPIC APIs. Below synapse configuration sample shows Epic Observation operation
+Use [WSO2 ESB EPIC Connector](https://store.wso2.com/store/assets/esbconnector/details/face7568-3bcd-4f10-882e-2941c6528df7) for execute EPIC APIs. Below synapse configuration sample shows Epic Observation operation
 ```xml
 <epic.searchObservation>
     <patient>{$ctx:id}</patient>
@@ -47,7 +47,7 @@ In addition EPIC_DATA_POLL_MEDICATION_ORDER_SEQUENCE for fetching Medication Ord
 
 #### Database Schema
 
-![ER diagram](../../src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
+![ER diagram](./src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
    
 
 **Step 2 : WSO2 EI validates retrieved responses.**

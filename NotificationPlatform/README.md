@@ -9,7 +9,7 @@ Note: Current Implementation only supports  EPIC systems (FHIR-DSTU2).
 
 This is a Simple Implementation of Realtime Healthcare-Notification Platform. Find below diagram to understand the flow of this solution.
 
-![Process Diagram](NotificationPlatform/src/docs/ArchitecturalDiagrams/processflow.png)
+![Process Diagram](../../src/docs/ArchitecturalDiagrams/processflow.png)
 
 **Step 1 : WSO2 EI fetches data from EHR systems(EPIC Sandbox in this case).** 
 
@@ -47,7 +47,7 @@ In addition EPIC_DATA_POLL_MEDICATION_ORDER_SEQUENCE for fetching Medication Ord
 
 #### Database Schema
 
-![ER diagram](/NotificationPlatform/src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
+![ER diagram](../../src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
    
 
 **Step 2 : WSO2 EI validates retrieved responses.**
@@ -174,8 +174,8 @@ Alert data are exposed as RESTful APIs. These are not recommended to be used as 
     
 ### Installation and Testing
     
-* Click [here](NotificationPlatform/src/docs/config.md) for the Local Installation Guide.
-* Click [here](NotificationPlatform/dist/docker-products/docs/config.md) for the Docker Installation Guide.    
+* Click [here](./dist/wso2hc-1.0.0) for the Local Installation Guide.
+* Click [here](./dist/docker-products) for the Docker Installation Guide.    
 
 ### Customizations and Extending the Solution
 
@@ -185,9 +185,48 @@ Hence this solution is limited to very few resources and Analyze types.
 
     #### Product Configuration
     
+    ##### WSO2 EI
+    
     * Configure WSO2 EI for Data Services. Refer [Exposing a Datasource as a Data Service](https://docs.wso2.com/display/EI640/Exposing+a+Datasource+as+a+Data+Service).
     
     * Configure WSO2 EI for Apache KAKFA support. WSO2 EI need to play a role of a consumer and producer in this scenario. 
+        
+        * Kafka Producer - [Kakfa Connector](https://github.com/wso2-extensions/esb-connector-kafka/tree/org.wso2.carbon.connector.kafkaTransport-2.0.5/docs) 
+        * Kafka Consumer - [Kafka Inbound Endpoint](https://github.com/wso2-extensions/esb-inbound-kafka/blob/org.apache.synapse.kafka.poll-1.0.5/docs/config.md)
+            
+    >If you are using kafka_2.x.x-0.8.2.0 or later, you also need to add the kafka-clients-0.8.x.x.jar file to the <EI_HOME>/lib  directory.
+    If you are using a newer version of ZooKeeper, follow the steps below.
+    > * Create a directory named conf inside the <EI_HOME>/repository directory.
+    > * Create a directory named identity inside the <EI_HOME>/repository/conf directory.
+    > * Add the jaas.conf file to the <EI_HOME>/repository/conf/identity directory. This is required because Kerberos authentication is enforced on newer versions of ZooKeeper.
+    
+    * Set offSet of Carbon.xml to 3 to avoid runtime port reusing.
+    ```xml
+      <offSet>3</offSet>
+    ```
+    
+    * Add below two lines to **conf/axis2/axis2.xml** for getting **apllication/json+fhir** support.
+       
+    ```xml
+      <!-- Under Message Formatters -->
+      <messageFormatter contentType="application/json+fhir" class="org.wso2.carbon.integrator.core.json.JsonStreamFormatter"/>
+    ```    
+    
+    ```xml
+      <!-- Under Message Builders--> 
+      <messageBuilder contentType="application/json+fhir" class="org.wso2.carbon.integrator.core.json.JsonStreamBuilder"/>
+    ```  
+    
+    ##### WSO2 SP
+    
+    * Configure WSO2 SP for Apache KAFKA. Refer [Kafka transport Support](https://docs.wso2.com/display/SP430/Supporting+Different+Transports#SupportingDifferentTransports-KafkatransportKafka) 
+
+    ##### WSO2 APIM
+    
+    * Set offSet of Carbon.xml to 10 to avoid runtime port reusing.
+        ```xml
+          <offSet>10</offSet>
+        ```
 
     #### Data Polling 
 

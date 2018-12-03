@@ -46,10 +46,10 @@ curl -X POST \http://wso2ei:8283/services/RDBMSDataService/patient \-H 'Content-
 Set  Count  Interval(In seconds) to execute sequence. (default count:0 / Interval:3600s)
 
 
-![EI_Tasks_Screenshot](NotificationPlatform/src/docs/Guidelinescreenshots/scheduledTasks.png)
+![EI_Tasks_Screenshot](../../src/docs/Guidelinescreenshots/scheduledTasks.png)
 
 
-![EI_Interval_Screenshot](NotificationPlatform/src/docs/Guidelinescreenshots/scheduledTaskInterval.png)
+![EI_Interval_Screenshot](../../src/docs/Guidelinescreenshots/scheduledTaskInterval.png)
 
 4 .In your Web browser, navigate to the SP dashboard using the following URL: https://localhost:9643/business-rules/ 
 
@@ -58,7 +58,7 @@ Create Business Rules for Each Observation Type using the **EPIC Healthcare Aler
 
 ##### Creating Observation Report Analyze Siddhi App 
 
-![analyze app](NotificationPlatform/src/docs/Guidelinescreenshots/observationSP.png)
+![analyze app](../../src/docs/Guidelinescreenshots/observationSP.png)
 
 Use Below Supported Input Kafka Streams : 
 1. hemoglobin-epic
@@ -69,7 +69,7 @@ Use Below Supported Input Kafka Streams :
 
 ##### Creating Alert Sending Siddhi App
 
-![analyze app](NotificationPlatform/src/docs/Guidelinescreenshots/sendAbnormalHB.png)
+![analyze app](../../src/docs/Guidelinescreenshots/sendAbnormalHB.png)
 
 Use Below Supported Output Kafka Streams :
 1. bloodhemoglobin-epic-alert
@@ -102,13 +102,13 @@ Follow below steps to quickly deploy the Healthcare Alert API , publish it, subs
 1 . Open the API Publisher (https://<hostname>:9443/publisher) and sign in with admin/admin credentials.
 2 . Exit from API creation tutorial by clicking the close icon(X) on top right corner.
 
-![create api](NotificationPlatform/src/docs/Guidelinescreenshots/createnewapi.png)
+![create api](../../src/docs/Guidelinescreenshots/createnewapi.png)
 
 3 . Click **ADD NEW API** button on top left corner and select **I have an Existing API** option.
 
 Upload swagger.json and click **Start Creating** button (Swagger can be find at ${base_dir}/dist/wso2hc-1.0.0/repository/deployment/APIM_apis/swagger.json)
 
-![select option api](NotificationPlatform/src/docs/Guidelinescreenshots/swagger_upload.png) 
+![select option api](../../src/docs/Guidelinescreenshots/swagger_upload.png) 
 
 4 . Lets design API. Set those properties and click **Implement** button.  
 
@@ -116,19 +116,19 @@ Upload swagger.json and click **Start Creating** button (Swagger can be find at 
 * Context: **/epicalert**
 * Version:**1.0.0**   
 
-![api definition](NotificationPlatform/src/docs/Guidelinescreenshots/apidefinition.png)
+![api definition](../../src/docs/Guidelinescreenshots/apidefinition.png)
   
 5 . Then select **Managed API**. Set Production and Sandbox URLs as below.
 * Production: **http://localhost:8283/services/**
 * Sandbox: **http://localhost:8283/services/**   
 
-![managed api](NotificationPlatform/src/docs/Guidelinescreenshots/managedapi.png)
+![managed api](../../src/docs/Guidelinescreenshots/managedapi.png)
 
 6 . Then click on **Manage** button. 
 
 Edit Throttling Settings. Set **Subscription Tiers** to Unlimited,Gold,Silver,Bronze. Then **Save and Deploy** API.
 
-![api configuration](NotificationPlatform/src/docs/Guidelinescreenshots/apiconfiguration.png)
+![api configuration](../../src/docs/Guidelinescreenshots/apiconfiguration.png)
 
 7 . Sign in to the API Store (https://localhost:9453/store) with the admin/admin credentials and click on the EpicHealthcareAlert API.
 
@@ -136,6 +136,6 @@ Follow [WSO2 API Quick Start Guide](https://docs.wso2.com/display/AM260/Quick+St
 
 Subscribed to Default application and Try out APIS.
 
-![api store](NotificationPlatform/src/docs/Guidelinescreenshots/apistore.png)
+![api store](../../src/docs/Guidelinescreenshots/apistore.png)
 
  

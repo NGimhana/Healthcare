@@ -71,10 +71,10 @@ curl -X POST \http://localhost:8283/services/RDBMSDataService/patient \-H 'Conte
 Set  Count  Interval(In seconds) to execute sequence. (default count:0 / Interval:3600s)
 
 
-![EI_Tasks_Screenshot](NotificationPlatform/src/docs/Guidelinescreenshots/scheduledTasks.png)
+![EI_Tasks_Screenshot](src/docs/Guidelinescreenshots/scheduledTasks.png)
 
 
-![EI_Interval_Screenshot](NotificationPlatform/src/docs/Guidelinescreenshots/scheduledTaskInterval.png)
+![EI_Interval_Screenshot](src/docs/Guidelinescreenshots/scheduledTaskInterval.png)
 
 4 .In your Web browser, navigate to the SP dashboard using the following URL: https://localhost:9643/business-rules/ 
 

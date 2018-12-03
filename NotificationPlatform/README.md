@@ -47,7 +47,7 @@ In addition EPIC_DATA_POLL_MEDICATION_ORDER_SEQUENCE for fetching Medication Ord
 
 #### Database Schema
 
-![ER diagram](NotificationPlatform/src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
+![ER diagram](/NotificationPlatform/src/docs/ArchitecturalDiagrams/entity_relationship_diagram.png)
    
 
 **Step 2 : WSO2 EI validates retrieved responses.**
@@ -156,14 +156,14 @@ Alert data are exposed as RESTful APIs. These are not recommended to be used as 
 * [GET]/DiagnosticAlertDataService/reports/patient/{patientId}/{date}
     * Retrieves all the diagnostic reports corresponding to specific patient with in a date
 
-##### Medication Order Related APIs (Potensial consumers = Pharmacists / Practitioners )
+##### Medication Order Related APIs (Potential consumers = Pharmacists / Practitioners )
 
 * [GET]/MedicationOrderDataService/allmedicationorders
     * Retrieves all the active medication orders
 * [GET]/MedicationOrderDataService/medicationOrders/patient/{patientId}
     * Retrieve all the Medication Reports corresponding to a specific patient given by patientId
 
-##### Accessing Subscribed Patients (Potensial consumers = Practitioners / Hospital admin)
+##### Accessing Subscribed Patients (Potential consumers = Practitioners / Hospital admin)
 
 * [POST]/RDBMSDataService/patient
     * Adding Patients who wants to be monitored to DB
@@ -177,5 +177,47 @@ Alert data are exposed as RESTful APIs. These are not recommended to be used as 
 * Click [here](NotificationPlatform/src/docs/config.md) for the Local Installation Guide.
 * Click [here](NotificationPlatform/dist/docker-products/docs/config.md) for the Docker Installation Guide.    
 
-## Customizations and Extending the Solution
+### Customizations and Extending the Solution
 
+* All used EHR Data is based on [EPIC SandBox](https://open.epic.com/Clinical/FHIR?whereTo=patient).
+Hence this solution is limited to very few resources and Analyze types.
+* Find below the Basics of Analyzing EHRs and  Notification Generation.
+
+    #### Product Configuration
+    
+    * Configure WSO2 EI for Data Services. Refer [Exposing a Datasource as a Data Service](https://docs.wso2.com/display/EI640/Exposing+a+Datasource+as+a+Data+Service).
+    
+    * Configure WSO2 EI for Apache KAKFA support. WSO2 EI need to play a role of a consumer and producer in this scenario. 
+
+    #### Data Polling 
+
+    * Remember that the system is required to keep Patient Ids whom should be monitored.
+    
+    * Create individual Sequences for EHR Data Polling. eg: EPIC_DATA_POLL_HB_OBSERVATION_SEQUENCE for polling Blood Hemoglobin related data from EPIC systems.
+    
+    * Use separate Scheduled Tasks for executing the sequences. eg: EpicDataPollHbObservationTask
+    
+    * Use WSO2 EI [EPIC](https://store.wso2.com/store/assets/esbconnector/details/face7568-3bcd-4f10-882e-2941c6528df7) / [CERNER](https://store.wso2.com/store/assets/esbconnector/details/edfd56f2-cfa8-4ec1-b479-a89041cd1414) connectors for API operations.
+    
+    * Use [Loinc codes](https://loinc.org) for various blood observation observations. Use these codes for fetching various Observation Types. See **Epic APIS Used** section for further details. eg: 718-7 for Blood Hemoglobin Observation  
+    
+    * Use Proper validations for validating data. Use [EPIC FHIR Error Codes](https://open.epic.com/Clinical/FHIR?whereTo=patient)
+    
+    * Create individual Kafka topics for each observation type. Always remember to create two topics. One for persisting vanilla EHR Data and other for Normalize Notifications. eg: hemoglobin-epic for keep EHR data and bloodhemoglobin-epic-alert for keeping normalized alert data.
+    
+    #### Data Analyzing 
+    
+    * The particular solution is just analyzing basic Observation reports. Comparison of values is the simplest logic.
+    
+    * Refer [Siddhi Streaming SQL Guide](http://wso2.github.io/siddhi/documentation/siddhi-4.0/) for lean the basics of Siddhi SQL.
+    
+    * Notification Generation is done mainly by two Siddhi Apps. One is for Analyzing EHRs and other is for Alert Generation. Those apps are exposed as Stream processor Templates.
+    Refer [Stream Processor Templates and Business Rules](https://docs.wso2.com/display/SP430/Working+with+Business+Rules) to learn on SP Templating and Business Rules.
+    
+    #### Data Visualization
+    
+    * Data visualization can be done several ways. Choose your own way. Find Below two suggestions.
+    
+    * Use Output Kafka Streams which contains processed Alerts or Use Enriched data persisted in DB as in this particular solution.
+    
+    * If go for 2nd option;Use persisted data in DB, use WSO2 EI for exposing data as [Data Services](https://docs.wso2.com/display/EI640/Exposing+a+Datasource+as+a+Data+Service) and use WSO2 APIM for [exposing APIS](https://docs.wso2.com/display/AM260/Quick+Start+Guide). Use provided **swagger.json** to take an idea.  

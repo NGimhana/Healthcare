@@ -64,7 +64,7 @@ EPIC SandBox Patients
 Use EI Management Console or execute below curl command.
 
 ```
-curl -X POST \http://localhost:8283/services/RDBMSDataService/patient \-H 'Content-Type: application/json' \-H 'Postman-Token: 8602e9b1-bfe6-4b53-8a23-0fcc6d63da0d' \-H 'cache-control: no-cache' \-d '{"_postpatient": {"patientId" : "Tbt3KuCY0B5PSrJvCu2j-PlK.aiHsu2xUjUM8bWpetXoB","shouldMonitor" : "1","EMR_PLATFORM" : "EPIC" }}'
+curl -X POST \http://localhost:8283/services/RDBMSDataService/patient \-H 'Content-Type: application/json' \-d '{"_postpatient": {"patientId" : "Tbt3KuCY0B5PSrJvCu2j-PlK.aiHsu2xUjUM8bWpetXoB","shouldMonitor" : "1","EMR_PLATFORM" : "EPIC" }}'
 ```
  
 3 . Then Select a ScheduledTask in EI console and Edit it. Lets select **EpicDataPollHbObservationTask**. 

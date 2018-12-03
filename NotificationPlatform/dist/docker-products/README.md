@@ -33,13 +33,13 @@ EPIC SandBox Patients
 |TwncfOQytqCYtmJKvdpDOSU7U1upj6s9crg-PFHQgSO0B|Emily Williams|
 |Tt.ozkoEh2-Kc6KfzsnFFLb-bD-FGZJk6gCno4QlSN7oB|Emily Williams|
 
-1. In your Web browser, navigate to the ESB profile's management console using the following URL: https://localhost:9443/carbon/
+1. In your Web browser, navigate to the ESB profile's management console using the following URL: https://localhost:9446/carbon/
 
 2. Insert one or more above Patient IDs to Employees Table.
 Use EI Management Console or execute below curl command.
 
 ```
-curl -X POST \http://wso2ei:8283/services/RDBMSDataService/patient \-H 'Content-Type: application/json' \-H 'Postman-Token: 8602e9b1-bfe6-4b53-8a23-0fcc6d63da0d' \-H 'cache-control: no-cache' \-d '{"_postpatient": {"patientId" : "Tbt3KuCY0B5PSrJvCu2j-PlK.aiHsu2xUjUM8bWpetXoB","shouldMonitor" : "1","EMR_PLATFORM" : "EPIC" }}'
+ curl -X POST \http://wso2ei:8283/services/RDBMSDataService/patient \-H 'Content-Type: application/json' \-d '{"_postpatient": {"patientId" : "Tbt3KuCY0B5PSrJvCu2j-PlK.aiHsu2xUjUM8bWpetXoB","shouldMonitor" : "1","EMR_PLATFORM" : "EPIC" }}'
 ```
  
 3 . Then Select a Scheduled Task in EI console and Edit it. Lets select **EpicDataPollHbObservationTask**.
@@ -119,8 +119,8 @@ Upload swagger.json and click **Start Creating** button (Swagger can be find at 
 ![api definition](../../src/docs/Guidelinescreenshots/apidefinition.png)
   
 5 . Then select **Managed API**. Set Production and Sandbox URLs as below.
-* Production: **http://localhost:8283/services/**
-* Sandbox: **http://localhost:8283/services/**   
+* Production: **http://wso2ei:8283/services/**
+* Sandbox: **http://wso2ei:8283/services/**   
 
 ![managed api](../../src/docs/Guidelinescreenshots/managedapi.png)
 

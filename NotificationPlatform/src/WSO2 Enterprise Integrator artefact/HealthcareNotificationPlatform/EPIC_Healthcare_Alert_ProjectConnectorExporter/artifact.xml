@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?><artifacts>
+    <artifact name="kafkaTransport-connector" groupId="com.wso2.healthcare.solutions.lib" version="2.0.5" type="synapse/lib" serverRole="EnterpriseServiceBus">
+        <file>kafkaTransport-connector-2.0.5.zip</file>
+    </artifact>
+    <artifact name="epic-connector" groupId="com.wso2.healthcare.solutions.lib" version="1.0.0" type="synapse/lib" serverRole="EnterpriseServiceBus">
+        <file>epic-connector-1.0.0.zip</file>
+    </artifact>
+</artifacts>

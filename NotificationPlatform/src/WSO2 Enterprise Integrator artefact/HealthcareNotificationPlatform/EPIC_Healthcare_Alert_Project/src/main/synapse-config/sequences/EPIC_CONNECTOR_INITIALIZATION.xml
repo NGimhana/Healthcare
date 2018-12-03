@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="EPIC_CONNECTOR_INITIALIZATION" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <epic.init>
+        <base>https://open-ic.epic.com/FHIR/api/FHIR/DSTU2</base>
+    </epic.init>
+</sequence>

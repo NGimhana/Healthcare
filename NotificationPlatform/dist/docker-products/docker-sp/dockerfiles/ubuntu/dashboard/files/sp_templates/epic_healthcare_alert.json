@@ -1,0 +1,133 @@
+{
+   "templateGroup": {
+      "uuid": "epic_healthcare_alert",
+      "name": "EPIC_Healthcare_Alert",
+      "description": "Analyze EPIC EMR to Alert Generation",
+      "ruleTemplates": [
+         {
+            "uuid": "analyzing_observation_reports",
+            "name": "Analyze_Observation_Reports",
+            "description": "Use EMR data for identifying ABNORMAL results. ",
+            "type": "template",
+            "instanceCount": "many",
+            "script": "var kafka_topic = getKafkaInputStreamName('${userInputForkafka_topic}');\n\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getKafkaInputStreamName(KafkaInputStream) {\n    return KafkaInputStream;\n}\n\n\nvar bootstrap_server = getBootstrapServer('${userInputForbootstrap_server}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getBootstrapServer(bootstrapServer) {\n    return bootstrapServer;\n}\n\n\n\n",
+            "templates": [
+               {
+                  "type": "siddhiApp",
+                  "content": "@App:name(\"ObservationReportSiddhiApp\")\n@App:description('Analyze Observation Reports')\n\n@info(name = 'Kafka Input Stream') \n@source(type='kafka',\n        topic.list='${kafka_topic}',\n        partition.no.list='0',\n        threading.option='single.thread',\n        group.id=\"group\",\n        bootstrap.servers='${bootstrap_server}',\n        @map(type='json' , @attributes(entry= '$.entry')))\ndefine stream DiagnosticReportDataStream (entry string);\n\n@info(name='Keeps splited test results') \ndefine stream SplittedDiagnosticReportStream(entry string, jsonElement string);\n\n@info(name='Report_stream') \ndefine stream ReportStream(patientId string ,title string, value double, low double, high double, reportdate string,reportId string,unit string);\n\n@sink(type = 'inMemory' , topic = 'DIAGNOSTIC_REPORT',@map(type = 'passThrough'))\ndefine stream AlertStream(patientId string , report string, result string,reportdate string,reportId string , highValue string , lowValue string , myValue string );\n\n@info(name = 'split_entry_query')\nfrom DiagnosticReportDataStream#json:tokenize(entry,'$')\nselect *\ninsert into SplittedDiagnosticReportStream;\n\n@info(name='extract_report_fields_query')\nfrom SplittedDiagnosticReportStream\nselect str:split(json:getString(jsonElement,'$.resource.subject.reference'), \"/\" , 8) as patientId , json:getString(jsonElement,'$.resource.code.text') as title , json:getDouble(jsonElement, '$.resource.valueQuantity.value') as value , json:getDouble(jsonElement, '$.resource.referenceRange[0].low.value') as low , json:getDouble(jsonElement, '$.resource.referenceRange[0].high.value') as high,json:getString(jsonElement, '$.resource.effectiveDateTime') as reportdate, json:getString(jsonElement, '$.resource.id') as reportId , json:getString(jsonElement,'$.resource.valueQuantity.unit') as unit\ninsert into ReportStream;\n\n@info(name = 'abnormal_filtering_query')\nfrom ReportStream[value < low or value > high]\nselect patientId as patientId , title as report, 'ABNORMAL' as result , reportdate as reportdate , reportId as reportId , str:concat(high , unit) as highValue , str:concat(low , unit) as lowValue , str:concat(value , unit) as myValue \ninsert into AlertStream;"
+               }
+            ],
+            "properties": {
+               "userInputForkafka_topic": {
+                  "fieldName": "Input Kafka Stream ",
+                  "description": "Name of the Stream, EPIC EMR Observations carries ",
+                  "defaultValue": "hemoglobin-epic"
+               },
+               "userInputForbootstrap_server": {
+                  "fieldName": "Bootstrap Server",
+                  "description": "This parameter specifies the list of Kafka servers to which the Kafka sink must publish events. This list should be provided as a set of comma separated values.",
+                  "defaultValue": "localhost:9092"
+               }
+            }
+         },
+         {
+            "uuid": "sending_abnormal_report_alerts",
+            "name": "Sending_ABNORMAL_Report_Alerts",
+            "description": "Publish ABNORMALITIES In Reports to Kafka Streams",
+            "type": "template",
+            "instanceCount": "many",
+            "script": "var output_kafka_stream = getKafkaOutputStreamName('${userInputForoutput_kafka_stream}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getKafkaOutputStreamName(KafkaOutputStream) {\n    return KafkaOutputStream;\n}\n\n\n\nvar bootstrap_server = getBootstrapServer('${userInputForbootstrap_server}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getBootstrapServer(bootstrapServer) {\n    return bootstrapServer;\n}\n\n\n\nvar sender_address = getSenderAddress('${userInputForsender_address}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getSenderAddress(senderAddress) {\n\treturn senderAddress;\n}\n\n\n\n\nvar sender_user_name = getSenderUserName('${userInputForsender_user_name}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getSenderUserName(senderUserName) {\n\treturn senderUserName;\n}\n\n\n\n\nvar email_password = getSenderEmailPassword('${userInputForemail_password}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getSenderEmailPassword(senderPassword) {\n\treturn senderPassword;\n}\n\n\n\n\nvar recipient_email = getRecipientAddress('${userInputForrecipient_email}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getRecipientAddress(recipientAddress) {\n\treturn recipientAddress;\n}\n\n\n\n\n",
+            "templates": [
+               {
+                  "type": "siddhiApp",
+                  "content": "@App:name(\"ObservationAlertSiddhi_App\")\n@App:description(\"Publish Abnormalities in Observation Reports to Kafka Streams\")\n\n@source(type = 'inMemory' , topic = 'DIAGNOSTIC_REPORT',@map(type = 'passThrough'))\ndefine stream AlertInputStream(patientId string ,report string, result string,reportdate string,reportId string ,  highValue string , lowValue string , myValue string );\n\n@sink(type = 'kafka',\n      topic = '${output_kafka_stream}', \n      partition.no='0',\n      bootstrap.servers='${bootstrap_server}',\n      @map(type = 'json'))\n@sink(type='log' , prefix=\"Alert : \") \n@sink(type='email', address='${sender_address}', username='${sender_user_name}', password='${email_password}', subject='CRITICAL REPORT ALERT', to='${recipient_email}', @map(type = 'text', @payload(\"Hello, Your {{report}} on {{reportdate}} has ABNORMAL value of {{myValue}}. Refernece Range HIGH:{{highValue}} LOW:{{lowValue}} . This message was generated automatically.\")))\ndefine stream AlertOutputStream(patientId string ,report string, result string, email string,reportdate string,reportId string , highValue string,lowValue string,myValue string);\n\n@info(name = 'send_alert_query')\nfrom AlertInputStream\nselect patientId ,report, result, '${recipient_email}' as email , reportdate as reportdate , reportId as reportId  , highValue , lowValue , myValue\ninsert into AlertOutputStream; "
+               }
+            ],
+            "properties": {
+               "userInputForoutput_kafka_stream": {
+                  "fieldName": "Output Kafka Stream",
+                  "description": "Name of the Stream, EPIC EMR Alerts carries",
+                  "defaultValue": "bloodhemoglobin-epic-alert"
+               },
+               "userInputForbootstrap_server": {
+                  "fieldName": "Bootstrap Server",
+                  "description": "This parameter specifies the list of Kafka servers to which the Kafka sink must publish events. This list should be provided as a set of comma separated values.",
+                  "defaultValue": "localhost:9092"
+               },
+               "userInputForsender_address": {
+                  "fieldName": "Sender Email",
+                  "description": "The email address of the sender.",
+                  "defaultValue": "nadeeshan@wso2.com"
+               },
+               "userInputForsender_user_name": {
+                  "fieldName": "Sender UserName",
+                  "description": "The email username of the sender. (Note: this should be without the @ and the latter part of the address. eg: @gmail.com)",
+                  "defaultValue": "nadeeshan"
+               },
+               "userInputForemail_password": {
+                  "fieldName": "Sender Email Password",
+                  "description": "The email password of the sender.",
+                  "defaultValue": "************"
+               },
+               "userInputForrecipient_email": {
+                  "fieldName": "Recipient Email",
+                  "description": "The recipient's email address.",
+                  "defaultValue": "gimhanadesilva.15@cse.mrt.ac.lk"
+               }
+            }
+         },
+         {
+            "uuid": "analyzing_active_medication_order",
+            "name": "Analyzing_Active_Medication_Order",
+            "description": "Use EMR data for identifying Active Medication Orders",
+            "type": "template",
+            "instanceCount": "many",
+            "script": "var kafka_topic = getKafkaOutputStreamName('${userInputForkafka_topic}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getKafkaOutputStreamName(KafkaOutputStream) {\n\treturn KafkaOutputStream;\n}\n\n\n\n\nvar bootstrap_server = getBootstrapServer('${userInputForbootstrap_server}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getBootstrapServer(bootstrapServer) {\n\treturn bootstrapServer;\n}\n\n\n\n\n",
+            "templates": [
+               {
+                  "type": "siddhiApp",
+                  "content": "@App:name(\"MedicationOrderSiddhiApp\")\n@App:description(\"Analysing Medication Order Reports for Active orders\")\n\n@info(name = 'Kafka Input Stream') \n@source(type='kafka',\n        topic.list='${kafka_topic}',\n        partition.no.list='0',\n        threading.option='single.thread',\n        group.id=\"group\",\n        bootstrap.servers='${bootstrap_server}',\n        @map(type='json' , @attributes(entry= '$.entry')))\ndefine stream MedicationOrderDataStream (entry string);\n\n@info(name='Keeps splited test results') \ndefine stream SplittedMedicationOrderStream(entry string, jsonElement string);\n\n@info(name='Report_stream') \ndefine stream ReportStream(patientId string, status string,  prescriberId string, Medication string, medicationOrderId string,Dosageinstruction string , frequency int , periodUnits string , period double , startDate string, endDate string );\n\n@sink(type = 'inMemory' , topic = 'MEDICATION_ALERT',@map(type = 'passThrough'))\ndefine stream AlertStream(patientId string , prescriberId string , Medication string ,medicationOrderId string, Dosageinstruction string , frequency int, periodUnits string , period double , startDate string , endDate string);\n\n@info(name = 'split_entry_query')\nfrom MedicationOrderDataStream#json:tokenize(entry,'$')\nselect *\ninsert into SplittedMedicationOrderStream;\n\n@info(name='extract_report_fields_query')\nfrom SplittedMedicationOrderStream\nselect str:split(json:getString(jsonElement,'$.resource.patient.reference'), \"/\" , 8) as patientId,json:getString(jsonElement,'$.resource.status') as status, str:split(json:getString(jsonElement,'$.resource.prescriber.reference'), \"/\" , 8) as prescriberId , json:getString(jsonElement, \"$.resource.medicationReference.display\") as Medication, json:getString(jsonElement,'$.resource.id') as medicationOrderId ,json:getString(jsonElement, \"$.resource.dosageInstruction[0].text\") as Dosageinstruction , json:getInt(jsonElement, \"$.resource.dosageInstruction[0].timing.repeat.frequency\") as frequency  , json:getString(jsonElement, \"$.resource.dosageInstruction[0].timing.repeat.periodUnits\") as periodUnits , json:getDouble(jsonElement, \"$.resource.dosageInstruction[0].timing.repeat.period\") as period , str:split(json:getString(jsonElement, \"$.resource.dispenseRequest.validityPeriod.start\") , \"T\" , 0) as startDate, ifThenElse(json:getString(jsonElement, \"$.resource.dispenseRequest.validityPeriod.end\") is null, \"ongoing\", str:split(json:getString(jsonElement, \"$.resource.dispenseRequest.validityPeriod.end\") , \"T\" , 0)) as endDate\ninsert into ReportStream;\n\n@info(name = 'Medication_Order_filtering_query')\nfrom ReportStream[status=='active']\nselect patientId , prescriberId  , Medication ,medicationOrderId , Dosageinstruction , frequency ,periodUnits , period , startDate , endDate\ninsert into AlertStream;"
+               }
+            ],
+            "properties": {
+               "userInputForkafka_topic": {
+                  "fieldName": "Input Kafka Stream",
+                  "description": "Name of the Stream, EPIC EMR Medication Order carries",
+                  "defaultValue": "Medication-order-epic"
+               },
+               "userInputForbootstrap_server": {
+                  "fieldName": "Bootstrap Server",
+                  "description": "This parameter specifies the list of Kafka servers to which the Kafka sink must publish events. This list should be provided as a set of comma separated values.",
+                  "defaultValue": "localhost:9092"
+               }
+            }
+         },
+         {
+            "uuid": "sending_active_medication_order_alerts",
+            "name": "Sending_Active_Medication_Order_Alerts",
+            "description": "Publishing Active Medication Orders In Reports to Kafka Streams",
+            "type": "template",
+            "instanceCount": "many",
+            "script": "var output_kafka_stream = getKafkaOutputStreamName('${userInputForoutput_kafka_stream}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getKafkaOutputStreamName(KafkaOutputStream) {\n\treturn KafkaOutputStream;\n}\n\n\n\n\nvar bootstrap_server = getBootstrapServer('${userInputForbootstrap_server}');\n\n/**\n* @returns Processed input\n* @param input User given value\n*/\nfunction getBootstrapServer(bootstrapServer) {\n\treturn bootstrapServer;\n}\n\n\n\n\n",
+            "templates": [
+               {
+                  "type": "siddhiApp",
+                  "content": "@App:name(\"MedicationOrderAlertsiddhiApp\")\n@App:description(\"Publish Active Medication Orders to Kafka Streams\")\n\n@source(type = 'inMemory' , topic = 'MEDICATION_ALERT',@map(type = 'passThrough'))\ndefine stream AlertInputStream(patientId string , prescriberId string , Medication string , medicationOrderId string, Dosageinstruction string , frequency int, periodUnits string , period double , startDate string , endDate string);\n\n@sink(type = 'kafka',topic = '${output_kafka_stream}', partition.no='0',bootstrap.servers='${bootstrap_server}',\t@map(type = 'json'))\n@sink(type='log' , prefix=\"Alert : \") \ndefine stream AlertOutputStream(patientId string , prescriberId string , Medication string ,medicationOrderId string, Dosageinstruction string , frequency int, periodUnits string , period double , startDate string , endDate string);\n\n@info(name = 'send_alert_query')\nfrom AlertInputStream\nselect patientId , prescriberId  , Medication ,medicationOrderId, Dosageinstruction , frequency ,periodUnits , period , startDate , endDate\ninsert into AlertOutputStream; "
+               }
+            ],
+            "properties": {
+               "userInputForoutput_kafka_stream": {
+                  "fieldName": "Output Kafka Stream",
+                  "description": "Name of the Stream, EPIC EMR Alerts carries",
+                  "defaultValue": "medication-order-epic-alert"
+               },
+               "userInputForbootstrap_server": {
+                  "fieldName": "Bootstrap Server",
+                  "description": "This parameter specifies the list of Kafka servers to which the Kafka sink must publish events. This list should be provided as a set of comma separated values.",
+                  "defaultValue": "localhost:9092"
+               }
+            }
+         }
+      ]
+   }
+}

@@ -1,0 +1,124 @@
+version: "3"
+services:
+
+  mysql-server:
+    image: mysql/mysql-server:5.7
+    container_name: epic-mysql
+    volumes:
+      - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "3306:3306"
+    networks:
+      - epic-network2
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    networks:
+      - epic-network2
+    ports:
+      - "2181:2181"
+
+  kafka:
+    build:
+      context: ./docker-kafka
+      dockerfile: Dockerfile
+    container_name: kafka
+    hostname: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_CREATE_TOPICS: "hemoglobin-epic:1:1,bloodhemoglobin-epic-alert:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - epic-network2
+
+  streamprocessordashboard:
+    build:
+      context: ./docker-sp/dockerfiles/ubuntu/dashboard
+      dockerfile: Dockerfile
+    container_name: wsos2spdashboard
+    ports:
+      - "9713:9713"
+      - "9643:9643"
+      - "9613:9613"
+      - "7713:7713"
+      - "7613:7613"
+    networks:
+      - epic-network2
+
+  streamprocessorworker:
+    build:
+      context: ./docker-sp/dockerfiles/ubuntu/worker
+      dockerfile: Dockerfile
+    container_name: wso2spworker
+    ports:
+      - "9090:9090"
+      - "9443:9443"
+      - "9712:9712"
+      - "9612:9612"
+      - "7711:7711"
+      - "7611:7611"
+      - "7070:7070"
+      - "7443:7443"
+    depends_on:
+      - streamprocessordashboard
+    networks:
+      - epic-network2
+
+
+  integrator:
+    build:
+      context: ./docker-ei/dockerfiles/ubuntu/integrator
+      dockerfile: Dockerfile
+    container_name: wso2ei
+    ports:
+      - "9446:9446"
+    depends_on:
+      - mysql-server
+    networks:
+      - epic-network2
+
+  apim:
+    build:
+      context: ./docker-apim/dockerfiles/ubuntu/apim
+      dockerfile: Dockerfile
+    container_name: wso2apim
+    ports:
+      - "8290:8290"
+      - "8253:8253"
+      - "9773:9773"
+      - "9453:9453"
+      - "9109:9109"
+      - "5682:5682"
+      - "9721:9721"
+      - "9621:9621"
+      - "7721:7721"
+      - "7621:7621"
+      - "10407:10407"
+    networks:
+      - epic-network2
+
+networks:
+  epic-network2:
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+
